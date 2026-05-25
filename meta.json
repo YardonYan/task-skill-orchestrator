@@ -1,0 +1,22 @@
+{
+  "author": "Yardon (https://github.com/YardonYan)",
+  "author_icon": "",
+  "description": "将复杂需求自动拆分为有依赖关系的子任务 DAG，按波次并行派发给多个 Sub Agent 执行，最后汇总结果。灵感来源于 am-will/codex-skills@parallel-task。",
+  "detail_describe": "解析用户复杂需求，自动拆分为原子子任务\n识别子任务间的依赖关系，构建有向无环图 (DAG)\n按依赖关系分波次，同波内并行派发 Sub Agent\n收集各子任务结果，处理失败重试\n汇总合并所有结果，输出结构化最终成果",
+  "display_description": "复杂任务自动拆解→依赖分析→并行派发→结果合并",
+  "display_name": "Task Skill Orchestrator",
+  "icon": "",
+  "last_modified_time": "2026-05-25 20:30:00",
+  "name": "task-skill-orchestrator",
+  "scope": [
+    "main"
+  ],
+  "tags": ["parallel", "dag", "orchestration", "task-scheduling", "multi-agent"],
+  "type": "效率工具",
+  "use_cases": [
+    "帮我做一个完整的竞品分析报告：调研特斯拉、比亚迪、蔚来的市场份额、技术路线和财务数据，最后汇总对比",
+    "同时帮我处理这些事：整理桌面文件、清理系统垃圾、检查磁盘空间、备份重要文档到 D 盘",
+    "写一篇关于 AI Agent 技术全景的文章：包括技术架构、主流框架对比、实际案例、未来趋势"
+  ],
+  "version": "1.0.0"
+}
