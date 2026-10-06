@@ -1,4 +1,34 @@
+<div align="center">
+
 # Task Skill Orchestrator / 任务编排大师
+
+**不要一次只做一件事。拆解、并行、编排**
+
+**Stop doing one thing at a time. Decompose, parallelize, orchestrate**
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/YardonYan/task-skill-orchestrator?style=social)](https://github.com/YardonYan/task-skill-orchestrator)
+[![Version](https://img.shields.io/badge/version-1.0.0-green)](#)
+[![Platform](https://img.shields.io/badge/platform-OpenClaw%20%C2%B7%20Claude%20Code%20%C2%B7%20Cursor-orange)](#quick-start)
+
+</div>
+
+---
+
+<div align="center">
+
+<a href="#intro"><b>这是什么</b></a> ·
+<a href="#quick-start"><b>快速开始</b></a> ·
+<a href="#features"><b>核心能力</b></a> ·
+<a href="#usage"><b>使用方式</b></a> ·
+<a href="#structure"><b>项目结构</b></a> ·
+<a href="#example"><b>示例</b></a> ·
+<a href="#license"><b>许可证</b></a>
+
+</div>
+
+---
+
 
 > **Stop doing one thing at a time. Decompose, parallelize, orchestrate.**
 > **不要一次只做一件事。拆解、并行、编排。**
@@ -10,10 +40,12 @@ A skill for decomposing complex user requests into a dependency-aware DAG of sub
 > **Adapted from [parallel-task by am-will](https://github.com/am-will/codex-skills)** — the foundational work that pioneered wave-based parallel task orchestration with dependency management.
 > **改编自 [am-will 的 parallel-task](https://github.com/am-will/codex-skills)** —— 开创基于波次的并行任务编排与依赖管理的基础性工作。
 
-[![GitHub](https://img.shields.io/badge/GitHub-YardonYan%2Ftask--skill--orchestrator-181717?logo=github)](https://github.com/YardonYan/task-skill-orchestrator)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 ---
+
+---
+
+<a id="intro"></a>
 
 ## What This Is / 这是什么
 
@@ -82,6 +114,8 @@ User Request / 用户需求
 
 ---
 
+<a id="features"></a>
+
 ## Features / 特性
 
 - **Automatic decomposition / 自动拆解**: Parses complex user requests and splits into atomic subtasks — no manual planning required. / 解析复杂用户需求，自动拆分为原子子任务，无需手动规划。
@@ -100,6 +134,8 @@ User Request / 用户需求
 
 > Can be adapted for Claude Code or other platforms. See `scripts/orchestrate.py` for a platform-agnostic DAG engine.
 > 可适配 Claude Code 或其他平台。平台无关的 DAG 引擎见 `scripts/orchestrate.py`。
+
+<a id="quick-start"></a>
 
 ## Installation / 安装
 
@@ -122,6 +158,8 @@ openclaw skill install task-skill-orchestrator
 ```
 
 ---
+
+<a id="usage"></a>
 
 ## Usage / 使用方式
 
@@ -179,6 +217,8 @@ Proceed with execution?
 
 ---
 
+<a id="structure"></a>
+
 ## File Structure / 文件结构
 
 ```
@@ -199,6 +239,8 @@ task-skill-orchestrator/
 ```
 
 ---
+
+<a id="example"></a>
 
 ## Running the Example / 运行示例
 
@@ -261,6 +303,13 @@ See [CHANGELOG.md](CHANGELOG.md) for full history. / 完整版本历史见 [CHAN
 
 - **v1.0.0** (2026-05-25): Initial release. Core four-phase pipeline: decompose → DAG → wave dispatch → aggregate. / 初始版本。核心四阶段流水线：拆解→依赖图→波次派发→汇总。
 
+
+<a id="license"></a>
+
 ## License / 许可证
 
-Apache 2.0 — see [LICENSE](LICENSE) for details. / 详见 [LICENSE](LICENSE)。
+**Apache-2.0** — 自由使用、修改、分发，需保留署名与协议声明。详见 [LICENSE](LICENSE)。
+
+Free to use, modify and distribute, provided that attribution and the license notice are retained. See [LICENSE](LICENSE) for the full text.
+
+Copyright 2026 YardonYan
