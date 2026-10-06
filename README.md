@@ -11,7 +11,7 @@ A skill for decomposing complex user requests into a dependency-aware DAG of sub
 > **改编自 [am-will 的 parallel-task](https://github.com/am-will/codex-skills)** —— 开创基于波次的并行任务编排与依赖管理的基础性工作。
 
 [![GitHub](https://img.shields.io/badge/GitHub-YardonYan%2Ftask--skill--orchestrator-181717?logo=github)](https://github.com/YardonYan/task-skill-orchestrator)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE.txt)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 ---
 
@@ -188,7 +188,7 @@ task-skill-orchestrator/
 ├── CHANGELOG.md             # Version history / 版本历史
 ├── CONTRIBUTING.md          # Contribution guide / 贡献指南
 ├── meta.json                # Skill metadata / 技能元数据
-├── LICENSE.txt              # Apache 2.0 License / Apache 2.0 许可证
+├── LICENSE              # Apache 2.0 License / Apache 2.0 许可证
 ├── .gitignore               # Git ignore rules / Git 忽略规则
 ├── examples/
 │   └── parallel_research.py # Runnable example demonstrating DAG logic / 可运行示例
@@ -263,4 +263,4 @@ See [CHANGELOG.md](CHANGELOG.md) for full history. / 完整版本历史见 [CHAN
 
 ## License / 许可证
 
-Apache 2.0 — see [LICENSE.txt](LICENSE.txt) for details. / 详见 [LICENSE.txt](LICENSE.txt)。
+Apache 2.0 — see [LICENSE](LICENSE) for details. / 详见 [LICENSE](LICENSE)。
