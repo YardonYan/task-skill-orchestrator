@@ -1,80 +1,82 @@
 <div align="center">
 
-# Task Skill Orchestrator / 任务编排大师
+<img src="assets/dag-waves.png" alt="task-skill-orchestrator — 拆解、并行、编排" width="100%">
 
-**不要一次只做一件事。拆解、并行、编排**
+**不要一次只做一件事。拆解、并行、编排。**
 
-**Stop doing one thing at a time. Decompose, parallelize, orchestrate**
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
 [![Stars](https://img.shields.io/github/stars/YardonYan/task-skill-orchestrator?style=social)](https://github.com/YardonYan/task-skill-orchestrator)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)](#)
-[![Platform](https://img.shields.io/badge/platform-OpenClaw%20%C2%B7%20Claude%20Code%20%C2%B7%20Cursor-orange)](#quick-start)
+[![平台](https://img.shields.io/badge/平台-OpenClaw%20·%20Claude%20Code%20·%20Cursor-orange.svg)](#平台)
+[![依赖](https://img.shields.io/badge/依赖-仅标准库-brightgreen.svg)](#文件结构)
+
+**中文** · [English](README.en.md)
 
 </div>
 
 ---
 
-<div align="center">
+> 把一个复杂需求拆成有依赖关系的子任务 DAG，按波次并行派发给多个 Sub Agent 执行，最后汇总成统一交付物。
 
-<a href="#intro"><b>这是什么</b></a> ·
-<a href="#quick-start"><b>快速开始</b></a> ·
-<a href="#features"><b>核心能力</b></a> ·
-<a href="#usage"><b>使用方式</b></a> ·
-<a href="#structure"><b>项目结构</b></a> ·
-<a href="#example"><b>示例</b></a> ·
-<a href="#license"><b>许可证</b></a>
+Stop doing one thing at a time. Decompose, parallelize, orchestrate.
 
-</div>
+## 目录
 
----
-
-
-> **Stop doing one thing at a time. Decompose, parallelize, orchestrate.**
-> **不要一次只做一件事。拆解、并行、编排。**
-
-A skill for decomposing complex user requests into a dependency-aware DAG of subtasks, dispatching them in parallel waves to multiple Sub Agents, and aggregating results into a unified deliverable.
-
-一个用于将复杂用户需求拆解为有依赖关系的子任务 DAG、分波次并行派发给多个 Sub Agent 执行、最后汇总为统一交付成果的技能。
-
-> **Adapted from [parallel-task by am-will](https://github.com/am-will/codex-skills)** — the foundational work that pioneered wave-based parallel task orchestration with dependency management.
-> **改编自 [am-will 的 parallel-task](https://github.com/am-will/codex-skills)** —— 开创基于波次的并行任务编排与依赖管理的基础性工作。
-
+- [解决什么问题](#解决什么问题)
+- [工作方式](#工作方式)
+- [核心能力](#核心能力)
+- [平台](#平台)
+- [安装](#安装)
+- [怎么调用](#怎么调用)
+- [使用示例](#使用示例)
+- [文件结构](#文件结构)
+- [运行示例](#运行示例)
+- [许可证](#许可证)
 
 ---
 
----
+<a id="解决什么问题"></a>
 
-<a id="intro"></a>
+## 解决什么问题
 
-## What This Is / 这是什么
+当 AI 面对一个复杂需求时——比如「调研三家公司并汇总成报告」，或者「整理桌面、清理系统垃圾、再备份重要文件」——默认做法是串行：先做 A，再做 B，再做 C。中间还夹着一次又一次的等待。
 
-When an AI faces a complex request — like "research three companies and merge into a report" or "clean up my desktop, clear system junk, and back up important files" — the default approach is sequential: do A, then B, then C. This is slow.
+真正的瓶颈不是单个任务慢，而是它们本来互不依赖，却被排成了一条队。
 
-当 AI 面对复杂需求时——比如「调研三家公司并汇总成报告」或「整理桌面、清理垃圾、备份文件」——默认做法是串行：先做 A，再做 B，再做 C。这很慢。
+**Task Orchestrator 改变这一点。** 它分析需求、拆成原子子任务、识别彼此依赖、构建有向无环图（DAG），再把互不依赖的子任务按波次并行派发。结果是更短的执行时间、更清晰的结构，以及每一步都可验证的中间产出。
 
-**Task Orchestrator changes this.** It analyzes the request, breaks it into atomic subtasks, identifies dependencies between them, builds a directed acyclic graph (DAG), and dispatches independent subtasks in parallel waves. The result: faster execution, clearer structure, and verifiable intermediate outputs.
+<a id="工作方式"></a>
 
-**Task Orchestrator 改变了这一点。** 它分析需求、拆解为原子子任务、识别依赖关系、构建有向无环图（DAG），并将独立子任务按波次并行派发。结果：更快的执行速度、更清晰的结构、可验证的中间产出。
+## 工作方式
 
-### Four-Phase Pipeline / 四阶段流水线
+<img src="assets/pipeline.png" alt="四阶段流水线：分析拆解 → 构建依赖图 → 波次规划 → 执行与汇总" width="100%">
+
+整个链路分四步：
+
+一、**分析拆解**。把用户需求切成粒度合理的原子子任务，并区分哪些独立、哪些有依赖。
+
+二、**构建依赖图**。识别数据依赖、时序依赖和逻辑依赖，构造成 DAG，并验证图中没有环。
+
+三、**波次规划**。对 DAG 做拓扑分层，同一层的任务互相独立，构成一个波次；生成执行计划交用户确认。
+
+四、**执行与汇总**。每个波次内的任务同时派发给多个 Sub Agent，全部返回后验收，再进入下一波，最后合并为统一交付物。
 
 ```mermaid
 graph TD
-    A[👤 User Request] --> B[🔍 Phase 1: Decompose]
-    B --> C[🧩 Phase 2: Build DAG]
-    C --> D[🌊 Phase 3: Wave Planning]
-    D --> E[⚡ Phase 4: Execute & Merge]
-    E --> F[📦 Final Deliverable]
+    A[👤 用户需求] --> B[🔍 阶段一：分析拆解]
+    B --> C[🧩 阶段二：构建依赖图]
+    C --> D[🌊 阶段三：波次规划]
+    D --> E[⚡ 阶段四：执行与汇总]
+    E --> F[📦 最终交付]
 
-    subgraph W0["Wave 0 (Parallel)"]
-        T1[Task 1]
-        T2[Task 2]
-        T3[Task 3]
+    subgraph W0["Wave 0（并行）"]
+        T1[任务 1]
+        T2[任务 2]
+        T3[任务 3]
     end
 
-    subgraph W1["Wave 1 (Aggregation)"]
-        T4[Task 4]
+    subgraph W1["Wave 1（汇总）"]
+        T4[任务 4]
     end
 
     T1 --> T4
@@ -82,64 +84,31 @@ graph TD
     T3 --> T4
 ```
 
-```
-User Request / 用户需求
-        │
-        ▼
-┌─────────────────────────┐
-│ Phase 1: Decompose      │  Analyze → split into atomic subtasks → classify
-│ 阶段一：分析拆解          │  分析 → 原子拆分 → 独立/依赖分类
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Phase 2: Build DAG      │  Identify dependencies → construct graph → validate
-│ 阶段二：构建依赖图        │  识别依赖 → 构建有向无环图 → 验证无循环
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Phase 3: Wave Planning  │  Topological sort → generate plan → user confirms
-│ 阶段三：波次规划          │  拓扑分层 → 生成计划 → 用户确认
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Phase 4: Execute & Merge│  Parallel dispatch per wave → verify → aggregate
-│ 阶段四：执行与汇总        │  每波并行派发 → 验收 → 汇总合并
-└─────────────────────────┘
-```
+一句话概括机制：**同一波次内可以并行，跨波次必须等待**。
 
+<a id="核心能力"></a>
 
+## 核心能力
 
----
+- **自动拆解**：解析复杂需求并切分为原子子任务，不需要人工规划。
+- **依赖感知 DAG**：识别子任务间的数据、时序与逻辑依赖，构建并验证有向无环图。
+- **波次并行派发**：把互相独立的子任务分到同一波，由多个 Sub Agent 同时执行。
+- **结果汇总**：收集全部子任务产出，优雅处理失败分支，合并为统一交付物。
+- **多 Agent 路由**：按任务类型自动路由到对应的 Sub Agent（file-agent、search-agent、browser、app-agent、computer-agent）。
 
-<a id="features"></a>
+<a id="平台"></a>
 
-## Features / 特性
+## 平台
 
-- **Automatic decomposition / 自动拆解**: Parses complex user requests and splits into atomic subtasks — no manual planning required. / 解析复杂用户需求，自动拆分为原子子任务，无需手动规划。
-- **Dependency-aware DAG / 依赖感知 DAG**: Identifies data, temporal, and logical dependencies between subtasks. Builds and validates a directed acyclic graph. / 识别子任务间的数据、时序和逻辑依赖，构建并验证有向无环图。
-- **Parallel wave dispatch / 波次并行派发**: Groups independent subtasks into waves. All tasks in a wave execute in parallel via multiple Sub Agents. / 将独立子任务分波，同波内所有任务通过多个 Sub Agent 并行执行。
-- **Result aggregation / 结果汇总**: Collects all subtask outputs, handles failures gracefully, merges into a unified final deliverable. / 收集所有子任务产出，优雅处理失败，合并为统一最终交付成果。
-- **Multi-agent routing / 多 Agent 路由**: Automatically routes each subtask to the correct Sub Agent (file-agent, search-agent, browser, app-agent, computer-agent). / 自动将每个子任务路由到正确的 Sub Agent。
+**主要平台**：OpenClaw（通过 `sessions_spawn` 派发子 Agent）。
 
----
+可适配 Claude Code 或其他具备子 Agent 能力的平台。平台无关的 DAG 引擎见 `scripts/orchestrate.py`。
 
-## Platform / 平台
+<a id="安装"></a>
 
-**Primary**: OpenClaw (uses `sessions_spawn` for sub-agent dispatch)
+## 安装
 
-**主要平台**：OpenClaw（使用 `sessions_spawn` 进行子 Agent 派发）
-
-> Can be adapted for Claude Code or other platforms. See `scripts/orchestrate.py` for a platform-agnostic DAG engine.
-> 可适配 Claude Code 或其他平台。平台无关的 DAG 引擎见 `scripts/orchestrate.py`。
-
-<a id="quick-start"></a>
-
-## Installation / 安装
-
-### For OpenClaw
+OpenClaw 环境：
 
 ```bash
 # macOS / Linux
@@ -151,165 +120,164 @@ cp -r task-skill-orchestrator ~/.qclaw/skills/
 Copy-Item -Recurse task-skill-orchestrator $env:USERPROFILE\.qclaw\skills\
 ```
 
-Or via SkillHub / 或通过 SkillHub：
+或通过 SkillHub：
 
 ```bash
 openclaw skill install task-skill-orchestrator
 ```
 
----
+<a id="怎么调用"></a>
 
-<a id="usage"></a>
+## 怎么调用
 
-## Usage / 使用方式
+在对话中使用以下任一表达即可触发：
 
-Trigger this skill by using any of the following keywords in conversation / 在对话中使用以下关键词即可触发：
+| 中文 | English |
+|------|---------|
+| 并行处理 | handle these in parallel |
+| 同时做这些 | do all of these at once |
+| 拆任务 | split this task |
+| 多线并进 | multi-thread this |
+| 批量执行 | batch execute |
+| 复杂任务拆解 | decompose this complex task |
 
-| English / 英文 | 中文 |
-|--------|------|
-| "handle these in parallel" | 「并行处理」 |
-| "do all of these at once" | 「同时做这些」 |
-| "split this task" | 「拆任务」 |
-| "multi-thread this" | 「多线并进」 |
-| "batch execute" | 「批量执行」 |
-| "decompose this complex task" | 「复杂任务拆解」 |
+<a id="使用示例"></a>
 
-### Example / 示例
+## 使用示例
 
-```
-User: 帮我调研特斯拉、比亚迪、蔚来三家公司的 2025 年市场份额、核心技术和最新财报，最后汇总成对比报告
-
-Agent:
-Decomposition complete. 4 subtasks, 2 waves.
-
-Wave 0 (parallel, 3 tasks):
-  ① Research Tesla 2025 market share, core tech, financials → search-agent
-  ② Research BYD 2025 market share, core tech, financials → search-agent
-  ③ Research NIO 2025 market share, core tech, financials → search-agent
-
-Wave 1 (aggregation, depends on all Wave 0):
-  ④ Merge three research results into comparison report → file-agent
-
-Proceed with execution?
-
-User: 执行
-
-[Agent dispatches T1/T2/T3 in parallel, waits for results, then dispatches T4]
-[Output: car_companies_comparison_report.md]
-```
-
-Another example / 另一个示例：
+例一，有依赖的场景：
 
 ```
-User: 同时帮我做三件事：整理桌面文件、清理系统垃圾、备份 D 盘重要文件到 E 盘
+用户：帮我调研特斯拉、比亚迪、蔚来三家公司的 2025 年市场份额、核心技术和最新财报，最后汇总成对比报告
 
-Agent:
-Decomposition complete. 3 subtasks, 1 wave.
-(All three are independent — no dependencies.)
+Agent：
+拆解完成。4 个子任务，2 个波次。
 
-Wave 0 (parallel, 3 tasks):
+Wave 0（并行，3 个任务）：
+  ① 调研特斯拉 2025 市场份额、核心技术、财报 → search-agent
+  ② 调研比亚迪 2025 市场份额、核心技术、财报 → search-agent
+  ③ 调研蔚来   2025 市场份额、核心技术、财报 → search-agent
+
+Wave 1（汇总，依赖 Wave 0 全部完成）：
+  ④ 合并三份调研结果，产出对比报告 → file-agent
+
+是否开始执行？
+
+用户：执行
+
+[Agent 并行派发 ①②③，等待全部返回，再派发 ④]
+[产出：car_companies_comparison_report.md]
+```
+
+例二，完全独立的场景：
+
+```
+用户：同时帮我做三件事：整理桌面文件、清理系统垃圾、备份 D 盘重要文件到 E 盘
+
+Agent：
+拆解完成。3 个子任务，1 个波次。
+（三者互相独立，无依赖关系。）
+
+Wave 0（并行，3 个任务）：
   ① 整理桌面文件 → file-agent
   ② 清理系统垃圾 → computer-agent
   ③ 备份 D 盘重要文件到 E 盘 → file-agent
 
-Proceed with execution?
+是否开始执行？
 ```
 
----
+<a id="文件结构"></a>
 
-<a id="structure"></a>
-
-## File Structure / 文件结构
+## 文件结构
 
 ```
 task-skill-orchestrator/
-├── SKILL.md                 # Core skill instructions / 核心技能指令
-├── README.md                # This file / 本文件
-├── CHANGELOG.md             # Version history / 版本历史
-├── CONTRIBUTING.md          # Contribution guide / 贡献指南
-├── meta.json                # Skill metadata / 技能元数据
-├── LICENSE              # Apache 2.0 License / Apache 2.0 许可证
-├── .gitignore               # Git ignore rules / Git 忽略规则
+├── SKILL.md                  # 核心技能指令
+├── README.md                 # 中文说明（本文件）
+├── README.en.md              # English README
+├── CHANGELOG.md              # 版本历史
+├── CONTRIBUTING.md           # 贡献指南
+├── LICENSE                   # Apache-2.0 许可证
+├── meta.json                 # 技能元数据
+├── assets/
+│   ├── dag-waves.png         # 分波并行机制图
+│   └── pipeline.png          # 四阶段流水线图
 ├── examples/
-│   └── parallel_research.py # Runnable example demonstrating DAG logic / 可运行示例
+│   └── parallel_research.py  # 可运行示例，演示 DAG 逻辑
 ├── scripts/
-│   └── orchestrate.py       # Platform-agnostic DAG engine / 平台无关的 DAG 引擎
-└── tests/
-    └── test_orchestrator.py # Unit tests for DAG logic / DAG 逻辑单元测试
+│   └── orchestrate.py        # 平台无关的 DAG 引擎
+├── tests/
+│   └── test_orchestrator.py  # DAG 逻辑单元测试
+└── tools/
+    └── gen_readme_images.py  # 生成 README 配图（Pillow）
 ```
 
----
+<a id="运行示例"></a>
 
-<a id="example"></a>
-
-## Running the Example / 运行示例
+## 运行示例
 
 ```bash
 cd examples
 python parallel_research.py
 ```
 
-Output / 输出：
+输出：
 
 ```
 ============================================================
-User request: 帮我调研特斯拉、比亚迪、蔚来三家公司的 2025 年市场份额...
+用户需求：帮我调研特斯拉、比亚迪、蔚来三家公司的 2025 年市场份额...
 ============================================================
 
-[Phase 1] Decomposition...
-4 subtasks:
-  [T1] Research Tesla 2025 market share, core tech, financials
-  [T2] Research BYD 2025 market share, core tech, financials
-  [T3] Research NIO 2025 market share, core tech, financials
-  [T4] Merge three research results into comparison report
+[阶段一] 分析拆解...
+4 个子任务：
+  [T1] 调研特斯拉 2025 市场份额、核心技术、财报
+  [T2] 调研比亚迪 2025 市场份额、核心技术、财报
+  [T3] 调研蔚来   2025 市场份额、核心技术、财报
+  [T4] 合并三份调研结果，产出对比报告
 
-[Phase 2] DAG Construction...
-Dependencies:
+[阶段二] 构建依赖图...
+依赖关系：
   T1 → T4
   T2 → T4
   T3 → T4
 
-[Phase 3] Wave Planning...
+[阶段三] 波次规划...
   Wave 0: T1, T2, T3
   Wave 1: T4
 
 ============================================================
-Execution Plan:
+执行计划：
 ============================================================
-Decomposition complete. 4 subtasks, 2 waves.
+拆解完成。4 个子任务，2 个波次。
 
-Wave 0 (parallel, 3 tasks):
-  • [T1] Research Tesla... → search-agent
-  • [T2] Research BYD... → search-agent
-  • [T3] Research NIO... → search-agent
+Wave 0（并行，3 个任务）：
+  • [T1] 调研特斯拉... → search-agent
+  • [T2] 调研比亚迪... → search-agent
+  • [T3] 调研蔚来...   → search-agent
 
-Wave 1 (aggregation):
-  • [T4] Merge three research results → file-agent
+Wave 1（汇总）：
+  • [T4] 合并三份调研结果 → file-agent
 
-Proceed with execution?
+是否开始执行？
 ============================================================
 ```
 
 ---
 
-## Contributing / 贡献
+## 贡献
 
-Issues and PRs are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-欢迎提交 Issue 和 PR！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献指南。
+欢迎提交 Issue 和 PR，请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## Version / 版本
+## 版本
 
-See [CHANGELOG.md](CHANGELOG.md) for full history. / 完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
+完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-- **v1.0.0** (2026-05-25): Initial release. Core four-phase pipeline: decompose → DAG → wave dispatch → aggregate. / 初始版本。核心四阶段流水线：拆解→依赖图→波次派发→汇总。
+- **v1.0.0**（2026-05-25）：初始版本。核心四阶段流水线：拆解 → 依赖图 → 波次派发 → 汇总。
 
+<a id="许可证"></a>
 
-<a id="license"></a>
+## 许可证
 
-## License / 许可证
-
-**Apache-2.0** — 自由使用、修改、分发，需保留署名与协议声明。详见 [LICENSE](LICENSE)。
-
-Free to use, modify and distribute, provided that attribution and the license notice are retained. See [LICENSE](LICENSE) for the full text.
+**Apache-2.0** —— 自由使用、修改、分发，需保留署名与协议声明。完整条款见 [LICENSE](LICENSE)。
 
 Copyright 2026 YardonYan
