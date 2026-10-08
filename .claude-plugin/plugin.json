@@ -1,0 +1,18 @@
+{
+  "name": "task-skill-orchestrator",
+  "version": "1.0.0",
+  "description": "Decompose complex user requests into a dependency-aware DAG of subtasks,",
+  "author": {
+    "name": "Yardon",
+    "url": "https://github.com/YardonYan"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/YardonYan/task-skill-orchestrator",
+  "repository": "https://github.com/YardonYan/task-skill-orchestrator",
+  "category": "skill",
+  "keywords": [
+    "agent-skill",
+    "ai-skill",
+    "task-skill-orchestrator"
+  ]
+}

@@ -162,7 +162,9 @@ class TaskOrchestrator:
 
         while remaining:
             wave = []
-            for tid in list(remaining):
+            # 同波任务本可并行，顺序不影响结果；按 id 自然序输出，
+            # 保证每次运行打印的 Wave 列表一致（T1 T2 ... T9 T10 而不是 T1 T10 T2）。
+            for tid in sorted(remaining, key=lambda s: (len(s), s)):
                 if in_degree[tid] == 0:
                     wave.append(tasks_by_id[tid])
                     remaining.remove(tid)

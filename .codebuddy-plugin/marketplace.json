@@ -1,0 +1,20 @@
+{
+  "name": "task-skill-orchestrator",
+  "description": "Decompose complex user requests into a dependency-aware DAG of subtasks, (single-plugin marketplace)",
+  "owner": {
+    "name": "Yardon",
+    "url": "https://github.com/YardonYan"
+  },
+  "metadata": {
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "task-skill-orchestrator",
+      "source": "./",
+      "description": "Decompose complex user requests into a dependency-aware DAG of subtasks,",
+      "version": "1.0.0",
+      "category": "skill"
+    }
+  ]
+}

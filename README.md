@@ -31,6 +31,7 @@ Stop doing one thing at a time. Decompose, parallelize, orchestrate.
 - [使用示例](#使用示例)
 - [文件结构](#文件结构)
 - [运行示例](#运行示例)
+- [排错](#排错)
 - [许可证](#许可证)
 
 ---
@@ -108,7 +109,34 @@ graph TD
 
 ## 安装
 
-OpenClaw 环境：
+### 用安装器（推荐）
+
+仓库自带一个零依赖的安装脚本，装到本机各个 AI 应用的 skills 目录，不需要手工拷贝：
+
+```bash
+node tools/install.mjs --list                 # 看有哪些目标可选
+node tools/install.mjs --ai openclaw          # 装到 OpenClaw
+node tools/install.mjs --ai workbuddy --ai trae-cn   # 一次装多个
+node tools/install.mjs --ai all               # 装到全部目标
+node tools/install.mjs --ai all --dry-run     # 只预览，不写文件
+node tools/install.mjs --ai openclaw --uninstall    # 卸载
+```
+
+已核对存在的目标：OpenClaw、WorkBuddy、TRAE 国内版、CodeBuddy、Claude Code、Codex CLI、Qwen Code、cc-switch。`cursor` 与通用 `.agents` 用的是通行约定，未在本机核对。
+
+### 作为插件安装（WorkBuddy / CodeBuddy / Claude Code）
+
+仓库根目录带 `.codebuddy-plugin/` 与 `.claude-plugin/` 两份清单，可以直接注册成一个「单插件市场」，在应用里按插件方式安装，不用手工拷目录。
+
+清单的字段名与取值是照着应用自带的插件清单写的，不是自己发明的格式。**文件格式已逐字段对照应用自带的市场核对；注册与加载的端到端流程未做验证**，注册入口以你所装版本的界面为准。
+
+改过 `SKILL.md` 的 name 或版本号之后重新生成：
+
+```bash
+node tools/build_plugins.mjs .
+```
+
+### OpenClaw 手工安装
 
 ```bash
 # macOS / Linux
@@ -193,6 +221,8 @@ Wave 0（并行，3 个任务）：
 ```
 task-skill-orchestrator/
 ├── SKILL.md                  # 核心技能指令
+├── .codebuddy-plugin/              插件清单（WorkBuddy / CodeBuddy）
+├── .claude-plugin/                 插件清单（Claude Code）
 ├── README.md                 # 中文说明（本文件）
 ├── README.en.md              # English README
 ├── CHANGELOG.md              # 版本历史
@@ -209,7 +239,8 @@ task-skill-orchestrator/
 ├── tests/
 │   └── test_orchestrator.py  # DAG 逻辑单元测试
 └── tools/
-    └── gen_readme_images.py  # 生成 README 配图（Pillow）
+│  ├── gen_readme_images.py  # 生成 README 配图（Pillow）
+│  └── build_plugins.mjs       生成插件清单
 ```
 
 <a id="运行示例"></a>
@@ -261,6 +292,56 @@ Wave 1（汇总）：
 是否开始执行？
 ============================================================
 ```
+
+## 排错
+
+### 装好了但对话里没反应
+
+按顺序查三件事：
+
+一、**`SKILL.md` 是否在技能目录的根层。** 正确结构是 `<应用技能目录>/task-skill-orchestrator/SKILL.md`。如果多套了一层目录，应用扫不到。
+
+二、**重启应用。** 多数应用只在启动时扫描技能目录。
+
+三、**确认目录是该应用真正会扫的那个。** 跑 `node tools/install.mjs --list` 看清单。
+
+### 说了「并行处理」，模型还是自己一个个做
+
+模型可能绕过技能、临时写脚本串行执行。触发词要用明白些，一次说清要并行：
+
+```
+这几件事互相独立，请用并行处理，先给我执行计划再动手
+```
+
+技能被设计成「先出计划、等确认、再派发」，所以看到计划就说明已经接管了。如果连计划都没有，就是没触发。
+
+### `python scripts/orchestrate.py` 卡住不动
+
+它在等 stdin。这个脚本从标准输入读 DAG 的 JSON，直接运行会一直挂着。正确用法：
+
+```bash
+echo '{"tasks":[{"id":"T1","description":"调研特斯拉"},{"id":"T2","description":"合并报告","depends_on":["T1"]}]}' | python scripts/orchestrate.py
+```
+
+只想看用法说明就跑 `python scripts/orchestrate.py --help`。
+
+### 同一波次里的任务顺序和我写的不一样
+
+正常。同波任务本来就是并行执行的，顺序没有意义；输出按任务 id 自然序排列（`T1 T2 ... T9 T10`），只是为了每次运行结果一致、方便比对。跨波次的顺序则是严格的，第 N+1 波必须等第 N 波全部返回。
+
+### 单元测试没有任何输出
+
+测试文件是 pytest 风格，直接 `python tests/test_orchestrator.py` 不会有任何反应。用 pytest 跑：
+
+```bash
+python -m pytest tests/test_orchestrator.py -v
+```
+
+当前共 16 个用例。
+
+### 目标平台没有 Sub Agent 能力
+
+技能在 OpenClaw 上用 `sessions_spawn` 派发子 Agent。如果目标平台不支持并行子 Agent，波次计划仍然可用来理清依赖和顺序，只是同波任务会退化成串行执行——结构上的收益（拆解、依赖可视化、可验证的中间产出）仍然保留。
 
 ---
 

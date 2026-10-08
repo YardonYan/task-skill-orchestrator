@@ -246,11 +246,17 @@ class WavePlanner:
         waves: List[List[Task]] = []
 
         while remaining:
-            wave = [
-                tasks_by_id[tid]
-                for tid in list(remaining)
-                if in_degree[tid] == 0
-            ]
+            # 同一波次内任务本可并行，执行顺序不影响结果；但输出要确定，
+            # 否则每次跑出来的 Wave 列表顺序都不一样，没法比对。
+            # 自然序：T1 T2 ... T9 T10，而不是字典序的 T1 T10 T2。
+            wave = sorted(
+                (
+                    tasks_by_id[tid]
+                    for tid in remaining
+                    if in_degree[tid] == 0
+                ),
+                key=lambda t: (len(t.id), t.id),
+            )
 
             if not wave:
                 raise ValueError(

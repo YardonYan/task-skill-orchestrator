@@ -29,6 +29,7 @@
 - [Examples](#examples)
 - [File Structure](#file-structure)
 - [Running the Example](#running-the-example)
+- [Troubleshooting](#troubleshooting)
 - [License](#license)
 
 ---
@@ -103,7 +104,34 @@ Adaptable to Claude Code or any other platform with sub-agent support. The platf
 
 ## Installation
 
-For OpenClaw:
+### Using the installer (recommended)
+
+The repo ships a zero-dependency installer that copies the skill into the skills directory of each AI app on your machine:
+
+```bash
+node tools/install.mjs --list                 # list available targets
+node tools/install.mjs --ai openclaw          # install into OpenClaw
+node tools/install.mjs --ai workbuddy --ai trae-cn   # several at once
+node tools/install.mjs --ai all               # every target
+node tools/install.mjs --ai all --dry-run     # preview only, writes nothing
+node tools/install.mjs --ai openclaw --uninstall    # remove
+```
+
+Targets verified to exist on a real machine: OpenClaw, WorkBuddy, TRAE China edition, CodeBuddy, Claude Code, Codex CLI, Qwen Code, cc-switch. `cursor` and the generic `.agents` target use the conventional path and have not been verified.
+
+### Installing as a plugin (WorkBuddy / CodeBuddy / Claude Code)
+
+The repository root carries `.codebuddy-plugin/` and `.claude-plugin/` manifests, so it can be registered directly as a single-plugin marketplace and installed as a plugin rather than by copying directories.
+
+The field names and values follow the manifests shipped inside the apps themselves — this is not a format of my own invention. **The file format was checked field by field against the apps' own bundled marketplaces; the end-to-end register-and-load flow has not been verified.** Where you register it depends on the version you have.
+
+Regenerate the manifests after changing the `name` or version in `SKILL.md`:
+
+```bash
+node tools/build_plugins.mjs .
+```
+
+### Manual installation for OpenClaw
 
 ```bash
 # macOS / Linux
@@ -190,6 +218,8 @@ Proceed with execution?
 ```
 task-skill-orchestrator/
 ├── SKILL.md                  # Core skill instructions
+├── .codebuddy-plugin/              Plugin manifests (WorkBuddy / CodeBuddy)
+├── .claude-plugin/                 Plugin manifests (Claude Code)
 ├── README.md                 # Chinese README
 ├── README.en.md              # English README (this file)
 ├── CHANGELOG.md              # Version history
@@ -206,7 +236,8 @@ task-skill-orchestrator/
 ├── tests/
 │   └── test_orchestrator.py  # Unit tests for the DAG logic
 └── tools/
-    └── gen_readme_images.py  # Generates README images (Pillow)
+│  ├── gen_readme_images.py  # Generates README images (Pillow)
+│  └── build_plugins.mjs       Generates plugin manifests
 ```
 
 <a id="running-the-example"></a>
@@ -258,6 +289,54 @@ Wave 1 (aggregation):
 Proceed with execution?
 ============================================================
 ```
+
+## Troubleshooting
+
+### Installed, but the skill never fires
+
+Check three things, in order:
+
+1. **Is `SKILL.md` at the top level of the skill directory?** The correct shape is `<app-skills-dir>/task-skill-orchestrator/SKILL.md`. An extra directory layer hides it from the app.
+2. **Restart the app.** Most apps scan the skills directory only at startup.
+3. **Is that the directory the app actually scans?** Run `node tools/install.mjs --list` to see the list.
+
+### You asked for parallel handling, but the model still does things one at a time
+
+The model may bypass the skill and write its own sequential script. Make the trigger explicit and state the intent once:
+
+```
+These tasks are independent — handle them in parallel. Show me the plan before you start.
+```
+
+The skill is designed to produce a plan first, wait for confirmation, then dispatch. If you see a plan, it has taken over. If you do not even get a plan, it did not trigger.
+
+### `python scripts/orchestrate.py` hangs
+
+It is waiting on stdin. The script reads the DAG as JSON from standard input, so running it bare blocks forever. Correct usage:
+
+```bash
+echo '{"tasks":[{"id":"T1","description":"Research Tesla"},{"id":"T2","description":"Merge report","depends_on":["T1"]}]}' | python scripts/orchestrate.py
+```
+
+For usage text only, run `python scripts/orchestrate.py --help`.
+
+### Task order inside a wave differs from what I wrote
+
+That is expected. Tasks in the same wave run in parallel, so their order carries no meaning; output is sorted by task id in natural order (`T1 T2 ... T9 T10`) purely so repeated runs produce identical output you can diff. Order *across* waves is strict — wave N+1 cannot start until every task in wave N has returned.
+
+### The unit tests print nothing
+
+The test file is pytest-style, so running `python tests/test_orchestrator.py` directly does nothing. Use pytest:
+
+```bash
+python -m pytest tests/test_orchestrator.py -v
+```
+
+16 cases currently.
+
+### The target platform has no sub-agent support
+
+The skill dispatches sub-agents through `sessions_spawn` on OpenClaw. Where a platform cannot run parallel sub-agents, the wave plan is still useful for reasoning about dependencies and ordering — tasks in the same wave simply degrade to sequential execution. The structural benefits (decomposition, visible dependencies, verifiable intermediate output) remain.
 
 ---
 
