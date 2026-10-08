@@ -1,0 +1,37 @@
+{
+  "name": "task-skill-orchestrator",
+  "version": "1.0.0",
+  "description": "Decompose complex user requests into a dependency-aware DAG of subtasks,",
+  "author": {
+    "name": "Yardon",
+    "url": "https://github.com/YardonYan"
+  },
+  "homepage": "https://github.com/YardonYan/task-skill-orchestrator",
+  "repository": "https://github.com/YardonYan/task-skill-orchestrator",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skill",
+    "ai-skill",
+    "task-skill-orchestrator"
+  ],
+  "skills": "./",
+  "hooks": {},
+  "interface": {
+    "displayName": "task-skill-orchestrator",
+    "shortDescription": "Decompose complex user requests into a dependency-aware DAG of subtasks,",
+    "longDescription": "Decompose complex user requests into a dependency-aware DAG of subtasks,",
+    "developerName": "Yardon",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "用 task-skill-orchestrator 处理当前项目里的相关任务",
+      "帮我看看这个项目的代码，用 task-skill-orchestrator 的规则来改"
+    ],
+    "websiteURL": "https://github.com/YardonYan/task-skill-orchestrator",
+    "screenshots": [],
+    "logo": "./assets/dag-waves.png"
+  }
+}
