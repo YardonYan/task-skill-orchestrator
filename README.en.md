@@ -420,6 +420,22 @@ The skill dispatches sub-agents through `sessions_spawn` on OpenClaw. Where a pl
 
 ---
 
+### Splitting too finely makes the merge harder
+
+A dozen tiny subtasks looks careful but manufactures merge work. The smaller the pieces, the blurrier the boundaries, and the more conflicts land in the aggregation step.
+
+A rough test: can the subtasks actually run in parallel? Work that can only queue gains nothing from being split, it just turns one context switch into three.
+
+Watch the merge cost as well. If writing the aggregation prompt takes longer than doing the task yourself, the split was a net loss.
+
+### Parallel subtasks depend on each other quietly
+
+Two subtasks that look independent share a config file, an output file, or an ID sequence. They run without errors and only collide at merge time.
+
+List shared resources during decomposition. Each one needs a single owner or a serial slot. Do not expect executors to notice the conflict on their own; their context does not contain the other side.
+
+The merge check should target exactly this: not whether each subtask is correct, but whether any two of them touched the same place.
+
 ## Contributing
 
 Issues and PRs are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
